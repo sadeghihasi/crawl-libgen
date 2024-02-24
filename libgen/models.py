@@ -1,6 +1,8 @@
 # db/models.py
 from django.db import models
 from manage import init_django
+from django.conf import settings
+
 
 init_django()
 
@@ -16,11 +18,15 @@ class Model(models.Model):
 # define models here
 
 
-class Keyword(Model):
+class Book(Model):
     keyword = models.CharField(max_length=50, verbose_name='searched word')
     author_name = models.CharField(max_length=255, verbose_name='auther name')
-    download_address = models.URLField(verbose_name='downloal address')
-    ids = models.CharField(max_length=10, unique=True, verbose_name='ids')
+    file_address = models.FileField(
+        upload_to=f'{settings.BASE_DIR}/uploads/', verbose_name='downloal address')
+    file = models.FileField()  # Set your desired upload path
+
+    id = models.CharField(max_length=10, unique=True, verbose_name='id', primary_key=True)
+    hash = models.CharField(max_length=32)  # Assuming it's a 32-character hash
 
     objects = models.Manager()
 

@@ -2,7 +2,8 @@ import argparse
 import requests
 from lxml import html
 from bs4 import BeautifulSoup
-from libgen.models import Keyword
+from libgen.models import Book
+from django.conf import settings
 
 
 def crawl_libgen(keyword):
@@ -19,8 +20,25 @@ def crawl_libgen(keyword):
         # Get texts from selected elements
         texts = [auther.text_content() for auther in authers]
         # Print the texts
-        for text in texts:
-            print(text)
+
+        id = book.xpath('./tbody/tr[8]/td[3]')[0].text_content()
+
+        hash = book.xpath(
+            './tbody/tr[11]/td[4]//a/@href')[0].replace("https://library.bz/main/edit/", "")
+
+        download_page_url = f"https://library.lol/main/{hash}"
+        response = requests.get(download_page_url)
+        if "content-disposition" in response.headers:
+            content_disposition = response.headers["content-disposition"]
+            file_name = content_disposition.split("filename=")[1]
+        else:
+            file_name = hash
+        file_path = f"{settings.BASE_DIR}/uploads/{file_name}"
+        with open(file_path, "w") as f:
+            f.write(response.content)
+
+        Book.objects.create(author_name=" ".join(
+            texts), keyword=keyword, id=id, file_address=file_path, hash=hash)
 
 
 if __name__ == "__main__":
@@ -40,10 +58,3 @@ if __name__ == "__main__":
         crawl_libgen(args.keyword)
     else:
         print("No action specified. Use --keyword or -k.")
-
-
-def perform_database_operations():
-    # Your code using Django ORM here
-    queryset = Keyword.objects.all()
-    for obj in queryset:
-        print(f'Title: {obj.title}, Content: {obj.content}')

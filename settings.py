@@ -6,10 +6,10 @@ INSTALLED_APPS = ['libgen']
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'myapp',
-        'USER': 'myapp_user',
-        'PASSWORD': 'myapp',
-        'HOST': '127.0.0.1',
+        'NAME': 'p1',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'localhost',
         'PORT': '5432',
     }
 }
