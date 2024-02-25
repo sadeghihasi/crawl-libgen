@@ -12,11 +12,14 @@ def init_django():
     if settings.configured:
         return
 
+    base_dir = Path(__file__).resolve().parent
+
     settings.configure(
         INSTALLED_APPS=INSTALLED_APPS,
         DATABASES=DATABASES,
         # Build paths inside the project like this: BASE_DIR / 'subdir'.
-        BASE_DIR = Path(__file__).resolve().parent.parent
+        BASE_DIR=base_dir,
+        MEDIA_ROOT=os.path.join(base_dir, "uploads")
     )
     django.setup()
 

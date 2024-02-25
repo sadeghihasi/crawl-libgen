@@ -22,9 +22,7 @@ class Book(Model):
     keyword = models.CharField(max_length=50, verbose_name='searched word')
     author_name = models.CharField(max_length=255, verbose_name='auther name')
     file_address = models.FileField(
-        upload_to=f'{settings.BASE_DIR}/uploads/', verbose_name='downloal address')
-    file = models.FileField()  # Set your desired upload path
-
+        upload_to=settings.MEDIA_ROOT, verbose_name='downloal address')
     id = models.CharField(max_length=10, unique=True, verbose_name='id', primary_key=True)
     hash = models.CharField(max_length=32)  # Assuming it's a 32-character hash
 
