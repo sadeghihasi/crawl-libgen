@@ -1,11 +1,13 @@
-import os
 import argparse
+import os
+
 import requests
-from lxml import html
 from bs4 import BeautifulSoup
-from libgen.models import Book
 from django.conf import settings
+from lxml import html
 from retrying import retry
+
+from libgen.models import Book
 
 
 @retry(stop_max_attempt_number=3, wait_fixed=100)
@@ -31,8 +33,7 @@ def crawl_libgen(keyword):
 
         id = book.xpath('./tbody/tr[8]/td[4]')[0].text_content()
 
-        hash = book.xpath(
-            './tbody/tr[11]/td[4]//a/@href')[0].replace("https://library.bz/main/edit/", "")
+        hash = book.xpath('./tbody/tr[11]/td[4]//a/@href')[0].replace("https://library.bz/main/edit/", "")
 
         download_page_url = f"https://library.lol/main/{hash}"
         response = make_request(url=download_page_url)
@@ -53,25 +54,14 @@ def crawl_libgen(keyword):
             print("The book download page is not available!")
             file_path = None
 
-        Book.objects.get_or_create(
-            author_name=" ".join(texts),
-            keyword=keyword, id=id,
-            file_address=file_path,
-            hash=hash
-        )
+        Book.objects.get_or_create(author_name=" ".join(texts), keyword=keyword, id=id, file_address=file_path,
+                                   hash=hash)
 
 
 if __name__ == "__main__":
     # Parsing command-line arguments
-    parser = argparse.ArgumentParser(
-        description='Keyword to search in the Libgen site'
-    )
-    parser.add_argument(
-        '--keyword',
-        '-k',
-        required=True,
-        help='Keyword to search in the Libgen site!'
-    )
+    parser = argparse.ArgumentParser(description='Keyword to search in the Libgen site')
+    parser.add_argument('--keyword', '-k', required=True, help='Keyword to search in the Libgen site!')
     args = parser.parse_args()
 
     if args.keyword:
