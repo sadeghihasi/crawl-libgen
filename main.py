@@ -58,13 +58,36 @@ def crawl_libgen(keyword):
                                    hash=hash)
 
 
+def report_libgen(keyword):
+    results = Book.objects.filter(kwargs=keyword)
+    for row in results:
+        # Access each row's attributes as needed
+        print(row)
+    
+    OUTPUT_FILE_PATH = 'output.csv'
+    field_names = [field.name for field in Book._meta.get_fields()]
+    with open(OUTPUT_FILE_PATH, 'w') as file:
+        # Write the header with column names to the file
+        file.write(','.join(field_names) + '\n')
+
+        # Iterate through the queryset
+        for row in results:
+            # Write the values of all columns to the file
+            values = [str(getattr(row, field)) for field in field_names]
+            file.write(','.join(values) + '\n')
+    print(f"Reports written to {OUTPUT_FILE_PATH}")
+
+
 if __name__ == "__main__":
     # Parsing command-line arguments
-    parser = argparse.ArgumentParser(description='Keyword to search in the Libgen site')
+    parser = argparse.ArgumentParser(description='Keyword to search and report in the Libgen site')
     parser.add_argument('--keyword', '-k', required=True, help='Keyword to search in the Libgen site!')
+    parser.add_argument('--report', '-r', required=False, help='Keyword to get the report!')
     args = parser.parse_args()
 
     if args.keyword:
         crawl_libgen(args.keyword)
+    elif args.report:
+        report_libgen(args.report)
     else:
-        print("No action specified. Use --keyword or -k.")
+        print("No action specified.\n\tUse --keyword or -k to search and store data.\n\tUse --report or -r to get the report.")
