@@ -1,43 +1,65 @@
-# Sales Report Generator
+# Libgen Scraper
 
-This project generates sales reports, including charts for the top 5 best-selling products, the number of orders each month, and the sales amount each month. Use postgres DB
+## Overview
+This Python-based scraper is developed to collect information from the Libgen website using appropriate Python tools. The purpose is to allow users to input a keyword and have the scraper retrieve all necessary information about the relation books and saving it to a database.
 
 ## Table of Contents
 
-- [Introduction](#introduction)
-- [Installation](#installation)
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
 - [Usage](#usage)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
+- [Contact](#contact)
 
-## Introduction
+## Features
+- **Keyword Search:** Users can input a keyword of their choice.
+- **Data Retrieval:** The scraper fetches relevant informations from the Libgen website based on the provided keyword: Auther, Name, File
+- **Database Storage:** The retrieved data is stored in a database for easy access.
 
-The main purpose of this project is to provide insights into sales data by generating reports and charts. When given the `-r` or `--report` argument, the system will produce charts for the top 5 best-selling products, the number of orders each month, and the sales amount each month.
+## Prerequisites
+Make sure you have the following installed before running the scraper:
+- Python 3.x
+- [Required Python Packages]
 
-## Installation
+## Getting Started
+1. Clone this repository to your local machine.
+   ```bash
+   git clone https://github.com/sadeghihasi/crawl-libgen
+   cd crawl-libgen
+   ```
 
-To install and run the project, follow these steps:
+2. Install the required Python packages.
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Start the postgres server and set the valuse in db_settings.py
-
-```bash
-cd your-repository
-pip install -r requirements.txt
-python main.py -r
-# or
-python main.py --report
-```
+3. Run the scraper script.
+   ```bash
+   python main.py -k [KEYWORD]  # to request and get the information from the server.
+   python main.py -r [KEYWORD]  # to get the report.
+   ```
 
 ## Usage
-1. Execute the project using the provided instructions in the Installation section.
-2. Enter the customer code when prompted.
-3. The system will generate charts displaying the number of purchases, purchase amounts, and the number of purchases for each product made by the specified customer in each month.
+1. Execute the scraper script and Enter the desired keyword.
+2. The scraper will fetch and store the relevant information in the database.
+3. Users can easily retrieve information based on the keyword.
 
+## License
+This project is licensed under the [MIT License] - see the [LICENSE.md] file for details.
+
+## Acknowledgments
+- Special thanks to the contributors who have helped enhance this scraper.
+
+Feel free to provide feedback, report issues, or contribute to make this Libgen scraper even better!
 
 <!-- CONTACT -->
 ## Contact
 
 Hasan Sadeghi - sadeghihasi@gmail.com
 
-Project Link: [https://github.com/sadeghihasi](https://github.com/sadeghihasi)
+Project Link: [https://github.com/sadeghihasi/crawl-libgen](https://github.com/sadeghihasi/crawl-libgen)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
