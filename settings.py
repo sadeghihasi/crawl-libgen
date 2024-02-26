@@ -1,6 +1,3 @@
-# your_project/settings.py
-
-
 # DJANGO SETTINGS
 INSTALLED_APPS = ['libgen']
 DATABASES = {
