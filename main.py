@@ -2,6 +2,9 @@ import argparse
 import os
 
 import requests
+import re
+from urllib.parse import unquote
+
 from bs4 import BeautifulSoup
 from django.conf import settings
 from lxml import html
@@ -21,6 +24,71 @@ def make_request(url):
     response = requests.get(url, timeout=(3, 10))
     response.raise_for_status()
     return response
+
+
+def extract_downloaded_file_name(content_disposition):
+    """
+    Extract file name from content_disposition of request header
+    """
+
+    # Use regular expression to extract filename
+    filename_match = re.search(r'filename=["\'](.*?)["\']', content_disposition)
+
+    if filename_match:
+        file_name_encoded = filename_match.group(1)
+        file_name = unquote(file_name_encoded)
+
+        return file_name
+
+    # If filename header is not present, fallback to a default name or handle accordingly
+    return False
+
+
+def download_from_cloudflare(book_hash: str) -> str:
+    """
+    Download book file from cloudflare
+    Return downloaded file path
+    """
+
+    # Construct the download page URL
+    download_page_url = f"https://library.lol/main/{book_hash}"
+
+    # Make a request to the book's download page
+    download_page_response = make_request(url=download_page_url)
+
+    soup = BeautifulSoup(download_page_response.text, 'html.parser')
+    root = html.fromstring(str(soup))
+
+    # Extract information for each book
+    download_link = root.xpath("//tr/td/div/ul/li/a[text()='Cloudflare']/@href")[0]
+
+    response = make_request(url=download_link)
+
+    # Check if the download page is accessible
+    if response.status_code == 200:
+        file_name = book_hash
+        # Determine the file name from the response headers
+        if "content-disposition" in response.headers:
+            content_disposition = response.headers["content-disposition"]
+            extracted_file_name = extract_downloaded_file_name(content_disposition)
+            if extracted_file_name:
+                file_name = extracted_file_name
+
+        # Define the file path
+        file_path = os.path.join(settings.MEDIA_ROOT, file_name)
+
+        # Create a directory if it doesn't exist
+        if not os.path.exists(settings.MEDIA_ROOT):
+            os.makedirs(settings.MEDIA_ROOT)
+
+        # Save the file content
+        with open(file_path, "wb") as f:
+            f.write(response.content)
+    else:
+        print("The book download page is not available!")
+        file_path = None
+
+    return file_path
 
 
 # Function to crawl Libgen for a given keyword
@@ -43,38 +111,12 @@ def crawl_libgen(keyword):
         book_id = book.xpath('./tbody/tr[8]/td[4]')[0].text_content()
         hash_value = book.xpath('./tbody/tr[11]/td[4]//a/@href')[0].replace("https://library.bz/main/edit/", "")
 
-        # Construct the download page URL
-        download_page_url = f"https://library.lol/main/{hash_value}"
-
-        # Make a request to the book's download page
-        response = make_request(url=download_page_url)
-
-        # Check if the download page is accessible
-        if response.status_code == 200:
-            # Determine the file name from the response headers
-            if "content-disposition" in response.headers:
-                content_disposition = response.headers["content-disposition"]
-                file_name = content_disposition.split("filename=")[1]
-            else:
-                file_name = hash_value
-
-            # Define the file path
-            file_path = os.path.join(settings.MEDIA_ROOT, file_name)
-
-            # Create a directory if it doesn't exist
-            if not os.path.exists(settings.MEDIA_ROOT):
-                os.makedirs(settings.MEDIA_ROOT)
-
-            # Save the file content
-            with open(file_path, "wb") as f:
-                f.write(response.content)
-        else:
-            print("The book download page is not available!")
-            file_path = None
+        file_path = download_from_cloudflare(book_hash=hash_value)
 
         # Create or update a Book object in the database
         Book.objects.get_or_create(author_name=" ".join(texts), keyword=keyword, id=book_id, file_address=file_path,
                                    hash=hash_value)
+        break
 
 
 # Function to generate a report for a given keyword
@@ -87,7 +129,7 @@ def report_libgen(keyword):
 
     # Write the header with column names to the file
     with open(REPORT_OUTPUT_FILE_PATH, 'w') as file:
-        file.write(','.join(field_names) + '\n')
+        file.write('\t'.join(field_names) + '\n')
 
         # Iterate through the queryset and write values to the file
         for row in results:
