@@ -1,16 +1,16 @@
 import argparse
 import os
-
-import requests
 import re
 from urllib.parse import unquote
 
+import requests
 from bs4 import BeautifulSoup
-from django.conf import settings
 from lxml import html
 from retrying import retry
 
-from libgen.models import Book  # Assuming the Book model is defined in libgen.models
+import settings
+from db_utilities.create_table import create_table_book
+from db_utilities.models import Book  # Assuming the Book model is defined in libgen.models
 
 # Define the output file path for the report
 REPORT_OUTPUT_FILE_PATH = 'output.tsv'
@@ -94,14 +94,16 @@ def download_from_cloudflare(book_hash: str) -> str:
 # Function to crawl Libgen for a given keyword
 def crawl_libgen(keyword):
     # Libgen search URL
-    URL = f"https://www.libgen.is/search.php?req={keyword}&open=0&res=25&view=detailed"
+    url = f"https://www.libgen.is/search.php?req={keyword}&open=0&res=25&view=detailed"
 
     # Make an HTTP request to the Libgen search page
-    response = make_request(url=URL)
+    response = make_request(url=url)
 
     # Parse the HTML response
     soup = BeautifulSoup(response.text, 'html.parser')
     root = html.fromstring(str(soup))
+
+    create_table_book(model=Book)
 
     # Extract information for each book
     books = root.xpath('/html/body/table/font/table')
@@ -114,18 +116,17 @@ def crawl_libgen(keyword):
         file_path = download_from_cloudflare(book_hash=hash_value)
 
         # Create or update a Book object in the database
-        Book.objects.get_or_create(author_name=" ".join(texts), keyword=keyword, id=book_id, file_address=file_path,
-                                   hash=hash_value)
-        break
+        Book.get_or_create(author_name=" ".join(texts), keyword=keyword, id=book_id, file_address=file_path,
+                           hash=hash_value)
 
 
 # Function to generate a report for a given keyword
 def report_libgen(keyword):
     # Retrieve Book objects from the database based on the keyword
-    results = Book.objects.filter(keyword=keyword)
+    results = Book.filter(keyword=keyword)
 
     # Get the field names of the Book model
-    field_names = [field.name for field in Book._meta.get_fields()]
+    field_names = [field for field in Book.__dict__]
 
     # Write the header with column names to the file
     with open(REPORT_OUTPUT_FILE_PATH, 'w') as file:
