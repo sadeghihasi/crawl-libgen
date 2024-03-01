@@ -126,7 +126,7 @@ def report_libgen(keyword):
     results = Book.filter(keyword=keyword)
 
     # Get the field names of the Book model
-    field_names = [field for field in Book.__dict__]
+    field_names = ["keyword", "author_name", "file_address", "id", "hash"]
 
     # Write the header with column names to the file
     with open(REPORT_OUTPUT_FILE_PATH, 'w') as file:
